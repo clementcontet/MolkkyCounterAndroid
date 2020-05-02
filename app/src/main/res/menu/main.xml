@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="AlwaysShowAction">
+
+    <item
+        android:id="@+id/action_total"
+        android:title="Objectif de points"
+        app:showAsAction="collapseActionView" />
+    <item
+        android:id="@+id/action_death"
+        android:title="Règle des 3 manqués"
+        app:showAsAction="collapseActionView" />
+    <item
+        android:id="@+id/action_add"
+        android:icon="@drawable/ic_person_add_white_24dp"
+        android:title="Nouveau joueur"
+        app:showAsAction="always" />
+
+</menu>

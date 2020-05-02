@@ -1,0 +1,33 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:windowBackground">@color/backgroundColor</item>
+    </style>
+
+    <dimen name="buttonHeight">48dp</dimen>
+
+    <style name="KeyboardButton" parent="@style/Widget.AppCompat.Button.Borderless">
+        <item name="android:layout_marginBottom">4dp</item>
+    </style>
+
+    <style name="KeyboardButton.Digit">
+        <item name="android:background">@drawable/rectangle_color_primary</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">30sp</item>
+    </style>
+
+    <style name="KeyboardButton.Backspace">
+        <item name="android:background">@drawable/rectangle_black</item>
+    </style>
+
+    <style name="KeyboardButton.Check">
+        <item name="android:background">@drawable/rectangle_color_accent_if_enabled_else_grey</item>
+    </style>
+
+</resources>
