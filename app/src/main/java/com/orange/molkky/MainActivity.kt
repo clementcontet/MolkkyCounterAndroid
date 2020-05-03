@@ -1,6 +1,10 @@
 package com.orange.molkky
 
+import android.content.Context
+import android.os.Build
 import android.os.Bundle
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.text.InputType
 import android.view.Menu
 import android.view.MenuInflater
@@ -48,12 +52,14 @@ class MainActivity : AppCompatActivity() {
         binding.keyboard.backspace.setOnClickListener {
             val length = binding.keyboard.newScore.text.length
             if (length > 0) {
+                vibrate()
                 binding.keyboard.newScore.text =
                     binding.keyboard.newScore.text.toString().substring(0, length - 1)
                 checkValidateButton()
             }
         }
         binding.keyboard.check.setOnClickListener {
+            vibrate()
             val score = binding.keyboard.newScore.text.toString().toInt()
             binding.keyboard.newScore.text = ""
             getActivePlayer()!!.scores.add(score)
@@ -62,9 +68,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun addDigit(digit: Int) {
+        vibrate()
         binding.keyboard.newScore.text =
             binding.keyboard.newScore.text.toString() + digit.toString()
         checkValidateButton()
+    }
+
+    private fun vibrate() {
+        val v = getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            v.vibrate(50)
+        }
     }
 
     private fun checkValidateButton() {
