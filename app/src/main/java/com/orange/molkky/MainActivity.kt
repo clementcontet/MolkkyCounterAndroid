@@ -221,6 +221,7 @@ class MainActivity : AppCompatActivity() {
                 .setNegativeButton("Annuler") { _, _ ->
                     computeGame()
                 }
+                .setOnCancelListener { computeGame() }
                 .show()
         }
 
