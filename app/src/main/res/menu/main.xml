@@ -5,6 +5,10 @@
     tools:ignore="AlwaysShowAction">
 
     <item
+        android:id="@+id/action_restart"
+        android:title="Recommencer"
+        app:showAsAction="collapseActionView" />
+    <item
         android:id="@+id/action_total"
         android:title="Objectif de points"
         app:showAsAction="collapseActionView" />

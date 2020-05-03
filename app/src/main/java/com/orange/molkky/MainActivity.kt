@@ -154,6 +154,19 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 return true
             }
+            R.id.action_restart -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Recommencer la partie ?")
+                    .setPositiveButton("Ok") { _, _ ->
+                        for (player in players) {
+                            player.scores = mutableListOf()
+                        }
+                        computeGame()
+                    }
+                    .setNegativeButton("Annuler", null)
+                    .show()
+                return true
+            }
             R.id.action_total -> {
                 AlertDialog.Builder(this)
                     .setTitle("Objectif ?")
