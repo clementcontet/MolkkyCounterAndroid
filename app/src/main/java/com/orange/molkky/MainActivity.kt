@@ -9,6 +9,7 @@ import android.text.InputType
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -106,6 +107,11 @@ class MainActivity : AppCompatActivity() {
         playersAdapter.submitList(playersViewModel.players)
         playersAdapter.notifyDataSetChanged()
         checkValidateButton()
+
+        binding.players.post {
+            binding.players.scrollToPosition(
+                playersViewModel.players.indexOf(getActivePlayer()))
+        }
     }
 
     private fun getActivePlayer(): PlayerInfo? {
