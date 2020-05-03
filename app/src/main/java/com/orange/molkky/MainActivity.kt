@@ -73,7 +73,15 @@ class MainActivity : AppCompatActivity() {
         for (player in players) {
             player.active = false
             player.playingState = PlayerInfo.PlayingState.PLAYING
+            player.rank = 0
             computeTotal(player)
+        }
+        var rank = 1
+        for (player in players
+            .filter { it.playingState == PlayerInfo.PlayingState.WON }
+            .sortedBy { it.roundWon }) {
+            player.rank = rank
+            rank++
         }
         getActivePlayer()?.active = true
         playersAdapter.submitList(players)
@@ -100,12 +108,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun computeTotal(player: PlayerInfo) {
         var total = 0
-        var numOfZero = 0
-        for (score in player.scores) {
+        var numOfConsecutiveZeros = 0
+        for ((index, score) in player.scores.withIndex()) {
             if (score == null) continue
             if (score == 0) {
-                numOfZero++
-                if (numOfZero == 3) {
+                numOfConsecutiveZeros++
+                if (numOfConsecutiveZeros == 3) {
                     total = 0
                     if (threeMissYouLose) {
                         player.playingState = PlayerInfo.PlayingState.LOST
@@ -113,12 +121,13 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             } else {
-                numOfZero = 0
+                numOfConsecutiveZeros = 0
                 total += score
                 if (total > goal) {
                     total = 25
                 } else if (total == goal) {
                     player.playingState = PlayerInfo.PlayingState.WON
+                    player.roundWon = index
                     break
                 }
             }
