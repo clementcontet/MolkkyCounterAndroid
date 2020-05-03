@@ -66,20 +66,18 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkValidateButton() {
         binding.check.isEnabled = getActivePlayer() != null &&
-                binding.newScore.text.toString().toIntOrNull() ?: 13 <= 12
+                binding.newScore.text.toString().toIntOrNull() ?: Int.MAX_VALUE <= 12
     }
 
     private fun computeGame() {
-        if (players.size > 0) {
-            for (player in players) {
-                player.active = false
-                player.playingState = PlayerInfo.PlayingState.PLAYING
-                computeTotal(player)
-            }
-            getActivePlayer()?.active = true
-            playersAdapter.submitList(players)
-            playersAdapter.notifyDataSetChanged()
+        for (player in players) {
+            player.active = false
+            player.playingState = PlayerInfo.PlayingState.PLAYING
+            computeTotal(player)
         }
+        getActivePlayer()?.active = true
+        playersAdapter.submitList(players)
+        playersAdapter.notifyDataSetChanged()
         checkValidateButton()
     }
 
