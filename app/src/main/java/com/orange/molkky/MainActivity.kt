@@ -7,6 +7,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.ItemTouchHelper.*
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.orange.molkky.databinding.ActivityMainBinding
@@ -24,6 +27,34 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
         binding.players.adapter = playersAdapter
+        val moveHandler =
+            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(START or END, 0) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean {
+                    val fromPos = viewHolder.adapterPosition
+                    val toPos = target.adapterPosition
+                    val pivotPlayer = players[toPos].copy()
+                    players[toPos] = players[fromPos]
+                    players[fromPos] = pivotPlayer
+                    playersAdapter.notifyItemMoved(fromPos, toPos)
+                    return true
+                }
+
+                override fun clearView(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder
+                ) {
+                    super.clearView(recyclerView, viewHolder)
+                    computeGame()
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
+            })
+        moveHandler.attachToRecyclerView(binding.players)
+
         computeGame()
 
         binding.button0.setOnClickListener { addDigit(0) }
