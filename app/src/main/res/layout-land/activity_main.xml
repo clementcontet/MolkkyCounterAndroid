@@ -9,27 +9,27 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/players"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toTopOf="@id/spacer"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/spacer"
+        app:layout_constraintStart_toStartOf="parent"
         tools:itemCount="4"
         tools:listitem="@layout/player" />
 
     <View
         android:id="@+id/spacer"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
+        android:layout_width="2dp"
+        android:layout_height="match_parent"
         android:background="@color/colorAccent"
-        app:layout_constraintBottom_toTopOf="@id/keyboard" />
+        app:layout_constraintEnd_toStartOf="@id/keyboard" />
 
     <include
         android:id="@+id/keyboard"
         layout="@layout/keyboard"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
