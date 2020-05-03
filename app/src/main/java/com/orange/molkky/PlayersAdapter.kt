@@ -12,7 +12,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.orange.molkky.databinding.PlayerBinding
 
-class PlayersAdapter(val computeGame: () -> Unit) :
+class PlayersAdapter(val changePlayer: (position: Int, newPlayer: PlayerInfo) -> Unit) :
     ListAdapter<PlayerInfo, PlayersAdapter.ViewHolder>(PlayersDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -21,13 +21,13 @@ class PlayersAdapter(val computeGame: () -> Unit) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)!!
-        holder.bind(item)
+        holder.bind(position)
     }
 
     inner class ViewHolder(private val binding: PlayerBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        fun bind(player: PlayerInfo) {
+        fun bind(playerPosition: Int) {
+            val player = getItem(playerPosition)
             binding.layout.setBackgroundColor(
                 ResourcesCompat.getColor(
                     binding.root.context.resources,
@@ -52,14 +52,14 @@ class PlayersAdapter(val computeGame: () -> Unit) :
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
                         player.name = editText.text.toString()
-                        computeGame()
+                        changePlayer(playerPosition, player)
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
             }
-            val adapter = ScoresAdapter { position, newScore ->
-                player.scores[position] = newScore
-                computeGame()
+            val adapter = ScoresAdapter { scorePosition, newScore ->
+                player.scores[scorePosition] = newScore
+                changePlayer(playerPosition, player)
             }
             binding.scores.adapter = adapter
             binding.total.text = player.total.toString() + " pts"

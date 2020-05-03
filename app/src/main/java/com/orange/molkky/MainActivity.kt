@@ -17,7 +17,10 @@ import com.orange.molkky.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var players: MutableList<PlayerInfo> = mutableListOf()
-    private val playersAdapter: PlayersAdapter = PlayersAdapter(::computeGame)
+    private val playersAdapter: PlayersAdapter = PlayersAdapter { position, newPlayer ->
+        players[position] = newPlayer
+        computeGame()
+    }
     private var threeMissYouLose = false
     private var goal = 50
 
@@ -27,34 +30,8 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
         binding.players.adapter = playersAdapter
-        val moveHandler =
-            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(START or END, 0) {
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    val fromPos = viewHolder.adapterPosition
-                    val toPos = target.adapterPosition
-                    val pivotPlayer = players[toPos].copy()
-                    players[toPos] = players[fromPos]
-                    players[fromPos] = pivotPlayer
-                    playersAdapter.notifyItemMoved(fromPos, toPos)
-                    return true
-                }
-
-                override fun clearView(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder
-                ) {
-                    super.clearView(recyclerView, viewHolder)
-                    computeGame()
-                }
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
-            })
-        moveHandler.attachToRecyclerView(binding.players)
-
+        val moveHelper = ItemTouchHelper(MoveHelper())
+        moveHelper.attachToRecyclerView(binding.players)
         computeGame()
 
         binding.button0.setOnClickListener { addDigit(0) }
@@ -202,6 +179,46 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private inner class MoveHelper : ItemTouchHelper.SimpleCallback(START or END, UP or DOWN) {
+        private var isSwiping: Boolean = false
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            isSwiping = false
+            val fromPos = viewHolder.adapterPosition
+            val toPos = target.adapterPosition
+            val pivotPlayer = players[toPos].copy()
+            players[toPos] = players[fromPos]
+            players[fromPos] = pivotPlayer
+            playersAdapter.notifyItemMoved(fromPos, toPos)
+            return true
+        }
+
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+            isSwiping = true
+            AlertDialog.Builder(binding.root.context)
+                .setTitle("Supprimer joueur ?")
+                .setPositiveButton("Ok") { _, _ ->
+                    players.removeAt(viewHolder.adapterPosition)
+                    computeGame()
+                }
+                .setNegativeButton("Annuler") { _, _ ->
+                    computeGame()
+                }
+                .show()
+        }
+
+        override fun clearView(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder
+        ) {
+            super.clearView(recyclerView, viewHolder)
+            if (!isSwiping) computeGame()
         }
     }
 }
