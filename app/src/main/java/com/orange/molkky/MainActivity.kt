@@ -6,40 +6,75 @@ import android.os.Bundle
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.text.InputType
+import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
-import android.view.View
-import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.orange.molkky.databinding.ActivityMainBinding
+import com.orange.molkky.db.AppDatabase
+import com.orange.molkky.db.PlayerTable
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    private val playersViewModel: PlayersViewModel by viewModels()
-    private val playersAdapter: PlayersAdapter = PlayersAdapter { position, newPlayer ->
-        playersViewModel.players[position] = newPlayer
-        computeGame()
-    }
+    lateinit var disposable: CompositeDisposable
+    lateinit var db: AppDatabase
+    lateinit var players: MutableList<PlayerTable>
+    lateinit var playersAdapter: PlayersAdapter
     private var threeMissYouLose = false
     private var goal = 50
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        disposable = CompositeDisposable()
         binding = ActivityMainBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
+        db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java, "molkky-db"
+        ).build()
+        playersAdapter = PlayersAdapter {
+            disposable.add(db.playerDao.updatePlayer(it)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { _ -> Log.i("Mölkky", "Player updated") }
+            )
+        }
         binding.players.adapter = playersAdapter
         val moveHelper = ItemTouchHelper(MoveHelper())
         moveHelper.attachToRecyclerView(binding.players)
-        computeGame()
 
+        disposable.add(db.playerDao.getPlayers()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                players = it.sortedBy { it.order }.toMutableList()
+                for ((index, player) in players.withIndex()) {
+                    player.order = index
+                }
+                computeGame()
+                handleKeys()
+            }
+        )
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        disposable.clear()
+    }
+
+    private fun handleKeys() {
         binding.keyboard.button0.setOnClickListener { addDigit(0) }
         binding.keyboard.button1.setOnClickListener { addDigit(1) }
         binding.keyboard.button2.setOnClickListener { addDigit(2) }
@@ -63,8 +98,13 @@ class MainActivity : AppCompatActivity() {
             vibrate()
             val score = binding.keyboard.newScore.text.toString().toInt()
             binding.keyboard.newScore.text = ""
-            getActivePlayer()!!.scores.add(score)
-            computeGame()
+            val activePlayer = getActivePlayer()!!
+            activePlayer.scores.add(score)
+            disposable.add(db.playerDao.updatePlayer(activePlayer)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe { _ -> Log.i("Mölkky", "Score added") }
+            )
         }
     }
 
@@ -80,6 +120,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             v.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         } else {
+            @Suppress("DEPRECATION")
             v.vibrate(50)
         }
     }
@@ -90,33 +131,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun computeGame() {
-        for (player in playersViewModel.players) {
+        for (player in players) {
             player.active = false
-            player.playingState = PlayerInfo.PlayingState.PLAYING
+            player.playingState = PlayerTable.PlayingState.PLAYING
             player.rank = 0
             computeTotal(player)
         }
         var rank = 1
-        for (player in playersViewModel.players
-            .filter { it.playingState == PlayerInfo.PlayingState.WON }
+        for (player in players
+            .filter { it.playingState == PlayerTable.PlayingState.WON }
             .sortedBy { it.roundWon }) {
             player.rank = rank
             rank++
         }
         getActivePlayer()?.active = true
-        playersAdapter.submitList(playersViewModel.players)
+        playersAdapter.submitList(players)
         playersAdapter.notifyDataSetChanged()
         checkValidateButton()
 
         binding.players.post {
             binding.players.scrollToPosition(
-                playersViewModel.players.indexOf(getActivePlayer()))
+                players.indexOf(getActivePlayer())
+            )
         }
     }
 
-    private fun getActivePlayer(): PlayerInfo? {
+    private fun getActivePlayer(): PlayerTable? {
         val round = getRound()
-        for (player in playersViewModel.players.filter { it.playingState == PlayerInfo.PlayingState.PLAYING }) {
+        for (player in players.filter { it.playingState == PlayerTable.PlayingState.PLAYING }) {
             if (player.scores.size < round) {
                 return player
             }
@@ -126,13 +168,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun getRound(): Int {
         val currentPlayers =
-            playersViewModel.players.filter { it.playingState == PlayerInfo.PlayingState.PLAYING }
+            players.filter { it.playingState == PlayerTable.PlayingState.PLAYING }
         val maxRound = currentPlayers.map { it.scores.size }.max() ?: 0
         val minRound = currentPlayers.map { it.scores.size }.min() ?: 0
         return if (maxRound == minRound) maxRound + 1 else maxRound
     }
 
-    private fun computeTotal(player: PlayerInfo) {
+    private fun computeTotal(player: PlayerTable) {
         var total = 0
         var numOfConsecutiveZeros = 0
         for ((index, score) in player.scores.withIndex()) {
@@ -142,7 +184,7 @@ class MainActivity : AppCompatActivity() {
                 if (numOfConsecutiveZeros == 3) {
                     total = 0
                     if (threeMissYouLose) {
-                        player.playingState = PlayerInfo.PlayingState.LOST
+                        player.playingState = PlayerTable.PlayingState.LOST
                         break
                     }
                 }
@@ -152,7 +194,7 @@ class MainActivity : AppCompatActivity() {
                 if (total > goal) {
                     total = 25
                 } else if (total == goal) {
-                    player.playingState = PlayerInfo.PlayingState.WON
+                    player.playingState = PlayerTable.PlayingState.WON
                     player.roundWon = index
                     break
                 }
@@ -178,12 +220,15 @@ class MainActivity : AppCompatActivity() {
                     .setTitle("Nom du joueur ?")
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
-                        val newPlayer = PlayerInfo(editText.text.toString())
+                        val newPlayer =
+                            PlayerTable(name = editText.text.toString(), order = players.size)
                         for (i in 0..getRound() - 2) {
                             newPlayer.scores.add(null)
                         }
-                        playersViewModel.players.add(newPlayer)
-                        computeGame()
+                        disposable.add(db.playerDao.insertPlayer(newPlayer)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe { _ -> Log.i("Mölkky", "Player added") })
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
@@ -193,10 +238,13 @@ class MainActivity : AppCompatActivity() {
                 AlertDialog.Builder(this)
                     .setTitle("Recommencer la partie ?")
                     .setPositiveButton("Ok") { _, _ ->
-                        for (player in playersViewModel.players) {
+                        for (player in players) {
                             player.scores = mutableListOf()
                         }
-                        computeGame()
+                        disposable.add(db.playerDao.updatePlayers(players)
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe { _ -> Log.i("Mölkky", "Scores reseted") })
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
@@ -205,10 +253,14 @@ class MainActivity : AppCompatActivity() {
             R.id.action_total -> {
                 AlertDialog.Builder(this)
                     .setTitle("Objectif ?")
-                    .setItems(arrayOf("50 points", "40 points")) { _, which ->
+                    .setSingleChoiceItems(
+                        arrayOf("50 points", "40 points"),
+                        if (goal == 50) 0 else 1
+                    ) { _, which ->
                         goal = if (which == 0) 50 else 40
                         computeGame()
                     }
+                    .setPositiveButton("Ok", null)
                     .create()
                     .show()
                 return true
@@ -216,10 +268,14 @@ class MainActivity : AppCompatActivity() {
             R.id.action_death -> {
                 AlertDialog.Builder(this)
                     .setTitle("Après 3 manqués...")
-                    .setItems(arrayOf("Retour à 0 points", "C'est perdu !")) { _, which ->
+                    .setSingleChoiceItems(
+                        arrayOf("Retour à 0 points", "C'est perdu !"),
+                        if (threeMissYouLose) 1 else 0
+                    ) { _, which ->
                         threeMissYouLose = which == 1
                         computeGame()
                     }
+                    .setPositiveButton("Ok", null)
                     .create()
                     .show()
                 return true
@@ -238,9 +294,15 @@ class MainActivity : AppCompatActivity() {
             isSwiping = false
             val fromPos = viewHolder.adapterPosition
             val toPos = target.adapterPosition
-            val pivotPlayer = playersViewModel.players[toPos].copy()
-            playersViewModel.players[toPos] = playersViewModel.players[fromPos]
-            playersViewModel.players[fromPos] = pivotPlayer
+
+            val pivotOrder = players[toPos].order
+            players[toPos].order = players[fromPos].order
+            players[fromPos].order = pivotOrder
+
+            val pivotPlayer = players[toPos].copy()
+            players[toPos] = players[fromPos]
+            players[fromPos] = pivotPlayer
+
             playersAdapter.notifyItemMoved(fromPos, toPos)
             return true
         }
@@ -250,12 +312,12 @@ class MainActivity : AppCompatActivity() {
             AlertDialog.Builder(binding.root.context)
                 .setTitle("Supprimer joueur ?")
                 .setPositiveButton("Ok") { _, _ ->
-                    playersViewModel.players.removeAt(viewHolder.adapterPosition)
-                    computeGame()
+                    disposable.add(db.playerDao.deletePlayer(players[viewHolder.adapterPosition].playerId)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe { _ -> Log.i("Mölkky", "Player deleted") })
                 }
-                .setNegativeButton("Annuler") { _, _ ->
-                    computeGame()
-                }
+                .setNegativeButton("Annuler") { _, _ -> computeGame() }
                 .setOnCancelListener { computeGame() }
                 .show()
         }
@@ -265,7 +327,12 @@ class MainActivity : AppCompatActivity() {
             viewHolder: RecyclerView.ViewHolder
         ) {
             super.clearView(recyclerView, viewHolder)
-            if (!isSwiping) computeGame()
+            if (!isSwiping) {
+                disposable.add(db.playerDao.updatePlayers(players)
+                    .subscribeOn(Schedulers.io())
+                    .subscribe { _ -> Log.i("Mölkky", "Players swiped") }
+                )
+            }
         }
     }
 }

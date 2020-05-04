@@ -11,15 +11,22 @@ import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.res.ResourcesCompat
-import androidx.recyclerview.widget.DiffUtil
-import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import com.orange.molkky.databinding.PlayerBinding
+import com.orange.molkky.db.PlayerTable
 
-class PlayersAdapter(val changePlayer: (position: Int, newPlayer: PlayerInfo) -> Unit) :
-    ListAdapter<PlayerInfo, PlayersAdapter.ViewHolder>(PlayersDiffCallback()) {
+class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
+    RecyclerView.Adapter<PlayersAdapter.ViewHolder>() {
+    private var players: List<PlayerTable> = listOf()
+    fun submitList(newPlayers: List<PlayerTable>) {
+        players = newPlayers
+    }
+
+    override fun getItemCount(): Int {
+        return players.size
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding: PlayerBinding = PlayerBinding.inflate(LayoutInflater.from(parent.context))
@@ -40,13 +47,13 @@ class PlayersAdapter(val changePlayer: (position: Int, newPlayer: PlayerInfo) ->
         var animator: ObjectAnimator? = null
 
         fun bind(playerPosition: Int) {
-            val player = getItem(playerPosition)
+            val player = players[playerPosition]
             binding.layout.setBackgroundColor(
                 ResourcesCompat.getColor(
                     binding.root.context.resources,
                     when {
-                        player.playingState == PlayerInfo.PlayingState.WON -> R.color.colorPrimary
-                        player.playingState == PlayerInfo.PlayingState.LOST -> R.color.grey
+                        player.playingState == PlayerTable.PlayingState.WON -> R.color.colorPrimary
+                        player.playingState == PlayerTable.PlayingState.LOST -> R.color.grey
                         player.active -> R.color.colorAccent
                         else -> R.color.white
                     },
@@ -83,14 +90,14 @@ class PlayersAdapter(val changePlayer: (position: Int, newPlayer: PlayerInfo) ->
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
                         player.name = editText.text.toString()
-                        changePlayer(playerPosition, player)
+                        changePlayer(player)
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
             }
             val adapter = ScoresAdapter { scorePosition, newScore ->
                 player.scores[scorePosition] = newScore
-                changePlayer(playerPosition, player)
+                changePlayer(player)
             }
             binding.scores.adapter = adapter
             binding.total.text = player.total.toString() + " pts"
@@ -99,18 +106,6 @@ class PlayersAdapter(val changePlayer: (position: Int, newPlayer: PlayerInfo) ->
 
         fun unbind() {
             animator?.cancel()
-        }
-    }
-
-    private class PlayersDiffCallback : DiffUtil.ItemCallback<PlayerInfo>() {
-        override fun areItemsTheSame(oldItem: PlayerInfo, newItem: PlayerInfo): Boolean {
-            return oldItem.name == newItem.name
-        }
-
-        override fun areContentsTheSame(oldItem: PlayerInfo, newItem: PlayerInfo): Boolean {
-            return oldItem.name == newItem.name
-                    && oldItem.active == newItem.active
-                    && (oldItem.scores sameContentWith newItem.scores)!!
         }
     }
 }
