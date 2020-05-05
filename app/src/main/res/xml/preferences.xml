@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreferenceCompat
+        app:defaultValue="false"
+        app:key="@string/pref_3_miss"
+        app:summaryOff="Retour à 0 après 3 ratés"
+        app:summaryOn="Eliminé après 3 ratés"
+        app:title="Perdu après 3 ratés" />
+
+    <ListPreference
+        app:defaultValue="50"
+        app:entries="@array/goal_entries"
+        app:entryValues="@array/goal_values"
+        app:key="@string/pref_goal"
+        app:title="Points pour gagner"
+        app:useSimpleSummaryProvider="true" />
+
+</PreferenceScreen>

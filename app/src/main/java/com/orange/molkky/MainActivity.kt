@@ -1,6 +1,7 @@
 package com.orange.molkky
 
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.os.VibrationEffect
@@ -12,6 +13,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
 import androidx.recyclerview.widget.RecyclerView
@@ -54,7 +56,14 @@ class MainActivity : AppCompatActivity() {
         binding.players.adapter = playersAdapter
         val moveHelper = ItemTouchHelper(MoveHelper())
         moveHelper.attachToRecyclerView(binding.players)
+    }
 
+    override fun onResume() {
+        super.onResume()
+        threeMissYouLose = PreferenceManager.getDefaultSharedPreferences(this)
+            .getBoolean(getString(R.string.pref_3_miss), false)
+        goal = PreferenceManager.getDefaultSharedPreferences(this)
+            .getString(getString(R.string.pref_goal), "50")!!.toInt()
         disposable.add(db.playerDao.getPlayers()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -268,34 +277,8 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 return true
             }
-            R.id.action_total -> {
-                AlertDialog.Builder(this)
-                    .setTitle("Objectif ?")
-                    .setSingleChoiceItems(
-                        arrayOf("50 points", "40 points"),
-                        if (goal == 50) 0 else 1
-                    ) { _, which ->
-                        goal = if (which == 0) 50 else 40
-                        computeGame()
-                    }
-                    .setPositiveButton("Ok", null)
-                    .create()
-                    .show()
-                return true
-            }
-            R.id.action_death -> {
-                AlertDialog.Builder(this)
-                    .setTitle("Après 3 manqués...")
-                    .setSingleChoiceItems(
-                        arrayOf("Retour à 0 points", "C'est perdu !"),
-                        if (threeMissYouLose) 1 else 0
-                    ) { _, which ->
-                        threeMissYouLose = which == 1
-                        computeGame()
-                    }
-                    .setPositiveButton("Ok", null)
-                    .create()
-                    .show()
+            R.id.action_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
                 return true
             }
             else -> super.onOptionsItemSelected(item)

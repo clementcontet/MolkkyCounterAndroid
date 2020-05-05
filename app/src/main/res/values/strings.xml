@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">Mölkky</string>
+    <string name="pref_3_miss">pref_3_miss</string>
+    <string name="pref_goal">pref_goal</string>
+    <string name="title_activity_settings">Réglages</string>
 </resources>

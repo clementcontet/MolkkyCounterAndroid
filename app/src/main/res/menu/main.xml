@@ -5,25 +5,27 @@
     tools:ignore="AlwaysShowAction">
 
     <item
-        android:id="@+id/action_restart"
-        android:title="Recommencer"
-        app:showAsAction="collapseActionView" />
-    <item
-        android:id="@+id/action_delete_players"
-        android:title="Supprimer des joueurs"
-        app:showAsAction="collapseActionView" />
-    <item
-        android:id="@+id/action_total"
-        android:title="Objectif de points"
-        app:showAsAction="collapseActionView" />
-    <item
-        android:id="@+id/action_death"
-        android:title="Règle des 3 manqués"
-        app:showAsAction="collapseActionView" />
-    <item
         android:id="@+id/action_add"
         android:icon="@drawable/ic_person_add_white_24dp"
         android:title="Nouveau joueur"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_restart"
+        android:icon="@drawable/ic_settings_backup_restore_white_24dp"
+        android:title="Recommencer"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_delete_players"
+        android:icon="@drawable/ic_delete_white_24dp"
+        android:title="Supprimer des joueurs"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/ic_settings_white_24dp"
+        android:title="Réglages"
         app:showAsAction="always" />
 
 </menu>
