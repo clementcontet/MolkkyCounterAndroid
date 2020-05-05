@@ -146,11 +146,8 @@ class MainActivity : AppCompatActivity() {
         playersAdapter.notifyDataSetChanged()
         Log.i("Mölkky", "submit " + players.toString())
         checkValidateButton()
-
-        binding.players.post {
-            binding.players.smoothScrollToPosition(
-                players.indexOf(getActivePlayer())
-            )
+        getActivePlayer()?.let {
+            binding.players.post { binding.players.smoothScrollToPosition(players.indexOf(it)) }
         }
     }
 
@@ -251,6 +248,26 @@ class MainActivity : AppCompatActivity() {
                     .show()
                 return true
             }
+            R.id.action_delete_players -> {
+                val checked = players.map { false }.toMutableList()
+                AlertDialog.Builder(this)
+                    .setTitle("Joueurs à supprimer ?")
+                    .setMultiChoiceItems(
+                        players.map { it.name }.toTypedArray(),
+                        players.map { false }.toBooleanArray()
+                    ) { _, which, isChecked -> checked[which] = isChecked }
+                    .setPositiveButton("Ok")
+                    { _, _ ->
+                        disposable.add(db.playerDao.deletePlayers(players.filterIndexed { key, _ -> checked[key] })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe { _ -> Log.i("Mölkky", "Players deleted") })
+                    }
+                    .setNegativeButton("Annuler", null)
+                    .create()
+                    .show()
+                return true
+            }
             R.id.action_total -> {
                 AlertDialog.Builder(this)
                     .setTitle("Objectif ?")
@@ -285,14 +302,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private inner class MoveHelper : ItemTouchHelper.SimpleCallback(START or END, UP or DOWN) {
-        private var isSwiping: Boolean = false
+    private inner class MoveHelper : ItemTouchHelper.SimpleCallback(START or END, 0) {
         override fun onMove(
             recyclerView: RecyclerView,
             viewHolder: RecyclerView.ViewHolder,
             target: RecyclerView.ViewHolder
         ): Boolean {
-            isSwiping = false
             val fromPos = viewHolder.adapterPosition
             val toPos = target.adapterPosition
 
@@ -308,32 +323,14 @@ class MainActivity : AppCompatActivity() {
             return true
         }
 
-        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            isSwiping = true
-            AlertDialog.Builder(binding.root.context)
-                .setTitle("Supprimer joueur ?")
-                .setPositiveButton("Ok") { _, _ ->
-                    disposable.add(db.playerDao.deletePlayer(players[viewHolder.adapterPosition].playerId)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe { _ -> Log.i("Mölkky", "Player deleted") })
-                }
-                .setNegativeButton("Annuler") { _, _ -> computeGame() }
-                .setOnCancelListener { computeGame() }
-                .show()
-        }
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {}
 
-        override fun clearView(
-            recyclerView: RecyclerView,
-            viewHolder: RecyclerView.ViewHolder
-        ) {
+        override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
             super.clearView(recyclerView, viewHolder)
-            if (!isSwiping) {
-                disposable.add(db.playerDao.updatePlayers(players)
-                    .subscribeOn(Schedulers.io())
-                    .subscribe { _ -> Log.i("Mölkky", "Players swiped") }
-                )
-            }
+            disposable.add(db.playerDao.updatePlayers(players)
+                .subscribeOn(Schedulers.io())
+                .subscribe { _ -> Log.i("Mölkky", "Players swiped") }
+            )
         }
     }
 }

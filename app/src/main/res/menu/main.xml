@@ -9,6 +9,10 @@
         android:title="Recommencer"
         app:showAsAction="collapseActionView" />
     <item
+        android:id="@+id/action_delete_players"
+        android:title="Supprimer des joueurs"
+        app:showAsAction="collapseActionView" />
+    <item
         android:id="@+id/action_total"
         android:title="Objectif de points"
         app:showAsAction="collapseActionView" />
