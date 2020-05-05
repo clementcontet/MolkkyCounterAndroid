@@ -18,7 +18,7 @@ interface PlayerDao {
     @Transaction
     @Update
     fun updatePlayers(players: List<PlayerTable>): Single<Int>
-    
+
     @Query("DELETE FROM player_table WHERE playerId = :playerId")
     fun deletePlayer(playerId: Long): Single<Int>
 }

@@ -58,11 +58,8 @@ class MainActivity : AppCompatActivity() {
         disposable.add(db.playerDao.getPlayers()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe {
-                players = it.sortedBy { it.order }.toMutableList()
-                for ((index, player) in players.withIndex()) {
-                    player.order = index
-                }
+            .subscribe { dbPlayers ->
+                players = dbPlayers.sortedBy { it.order }.toMutableList()
                 computeGame()
                 handleKeys()
             }
@@ -147,6 +144,7 @@ class MainActivity : AppCompatActivity() {
         getActivePlayer()?.active = true
         playersAdapter.submitList(players)
         playersAdapter.notifyDataSetChanged()
+        Log.i("Mölkky", "submit " + players.toString())
         checkValidateButton()
 
         binding.players.post {
@@ -221,7 +219,10 @@ class MainActivity : AppCompatActivity() {
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
                         val newPlayer =
-                            PlayerTable(name = editText.text.toString(), order = players.size)
+                            PlayerTable(
+                                name = editText.text.toString(),
+                                order = (players.map { it.order }.max() ?: 0) + 1
+                            )
                         for (i in 0..getRound() - 2) {
                             newPlayer.scores.add(null)
                         }

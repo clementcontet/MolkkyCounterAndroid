@@ -44,7 +44,18 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
 
     inner class ViewHolder(private val binding: PlayerBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        var animator: ObjectAnimator? = null
+        var animator: ObjectAnimator = ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
+
+        init {
+            animator.duration = 1000
+            animator.repeatCount = INFINITE
+            animator.interpolator = AccelerateDecelerateInterpolator()
+            animator.addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    binding.star.rotation = 0f
+                }
+            })
+        }
 
         fun bind(playerPosition: Int) {
             val player = players[playerPosition]
@@ -62,19 +73,10 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
             )
             binding.name.text = player.name
 
-            if (player.rank > 0) {
+            if (player.playingState == PlayerTable.PlayingState.WON) {
                 binding.rank.text = player.rank.toString()
                 binding.medal.visibility = View.VISIBLE
-                animator = ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
-                animator?.duration = 1000
-                animator?.repeatCount = INFINITE
-                animator?.interpolator = AccelerateDecelerateInterpolator()
-                animator?.addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator?) {
-                        binding.star.rotation = 0f
-                    }
-                })
-                animator?.start()
+                animator.start()
             } else {
                 binding.medal.visibility = View.GONE
             }
@@ -105,7 +107,7 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
         }
 
         fun unbind() {
-            animator?.cancel()
+            animator.cancel()
         }
     }
 }
