@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
         checkValidateButton()
 
         binding.players.post {
-            binding.players.scrollToPosition(
+            binding.players.smoothScrollToPosition(
                 players.indexOf(getActivePlayer())
             )
         }
