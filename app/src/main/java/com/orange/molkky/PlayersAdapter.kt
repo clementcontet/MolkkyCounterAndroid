@@ -44,7 +44,7 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
 
     inner class ViewHolder(private val binding: PlayerBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        var animator: ObjectAnimator = ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
+        private var animator: ObjectAnimator = ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
 
         init {
             animator.duration = 1000

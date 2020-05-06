@@ -153,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         getActivePlayer()?.active = true
         playersAdapter.submitList(players)
         playersAdapter.notifyDataSetChanged()
-        Log.i("Mölkky", "submit " + players.toString())
+        Log.i("Mölkky", "submit $players")
         checkValidateButton()
         getActivePlayer()?.let {
             binding.players.post { binding.players.smoothScrollToPosition(players.indexOf(it)) }

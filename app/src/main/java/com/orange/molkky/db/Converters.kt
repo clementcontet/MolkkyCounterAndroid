@@ -5,7 +5,7 @@ import androidx.room.TypeConverter
 class Converters {
     @TypeConverter
     fun fromArray(scoresList: List<Int?>): String {
-        return scoresList.map { it?.toString() ?: "-" }.joinToString(",")
+        return scoresList.joinToString(",") { it?.toString() ?: "-" }
     }
 
     @TypeConverter
