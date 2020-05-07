@@ -11,6 +11,7 @@ import android.util.Log
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
@@ -56,6 +57,7 @@ class MainActivity : AppCompatActivity() {
         binding.players.adapter = playersAdapter
         val moveHelper = ItemTouchHelper(MoveHelper())
         moveHelper.attachToRecyclerView(binding.players)
+        binding.newPlayer.setOnClickListener { createNewPlayer() }
     }
 
     override fun onResume() {
@@ -151,7 +153,16 @@ class MainActivity : AppCompatActivity() {
             rank++
         }
         getActivePlayer()?.active = true
+
         playersAdapter.submitList(players)
+        if (players.isEmpty()) {
+            binding.players.visibility = View.GONE
+            binding.newPlayer.visibility = View.VISIBLE
+        } else {
+            binding.players.visibility = View.VISIBLE
+            binding.newPlayer.visibility = View.GONE
+        }
+
         playersAdapter.notifyDataSetChanged()
         Log.i("Mölkky", "submit $players")
         checkValidateButton()
@@ -216,29 +227,7 @@ class MainActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_add -> {
-                val editText = TextInputEditText(this)
-                val inputLayout = TextInputLayout(this)
-                inputLayout.addView(editText)
-                editText.inputType = InputType.TYPE_TEXT_FLAG_CAP_WORDS
-                AlertDialog.Builder(this)
-                    .setTitle("Nom du joueur ?")
-                    .setView(inputLayout)
-                    .setPositiveButton("Ok") { _, _ ->
-                        val newPlayer =
-                            PlayerTable(
-                                name = editText.text.toString(),
-                                order = (players.map { it.order }.max() ?: 0) + 1
-                            )
-                        for (i in 0..getRound() - 2) {
-                            newPlayer.scores.add(null)
-                        }
-                        disposable.add(db.playerDao.insertPlayer(newPlayer)
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe { _ -> Log.i("Mölkky", "Player added") })
-                    }
-                    .setNegativeButton("Annuler", null)
-                    .show()
+                createNewPlayer()
                 return true
             }
             R.id.action_restart -> {
@@ -283,6 +272,33 @@ class MainActivity : AppCompatActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    private fun createNewPlayer() {
+        val editText = TextInputEditText(this)
+        val inputLayout = TextInputLayout(this)
+        inputLayout.addView(editText)
+        editText.inputType = InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        AlertDialog.Builder(this)
+            .setTitle("Nom du joueur ?")
+            .setView(inputLayout)
+            .setPositiveButton("Ok") { _, _ ->
+                val newPlayer =
+                    PlayerTable(
+                        name = editText.text.toString(),
+                        order = (players.map { it.order }.max() ?: 0) + 1
+                    )
+                for (i in 0..getRound() - 2) {
+                    newPlayer.scores.add(null)
+                }
+                disposable.add(db.playerDao.insertPlayer(newPlayer)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe { _ -> Log.i("Mölkky", "Player added") }
+                )
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
     }
 
     private inner class MoveHelper : ItemTouchHelper.SimpleCallback(START or END, 0) {
