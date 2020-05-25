@@ -13,11 +13,12 @@ import com.orange.molkky.databinding.ScoreBinding
 import java.text.DecimalFormat
 
 
-class ScoresAdapter(val changeScores: (position: Int, newScore: Int) -> Unit) :
-    ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutionDiffCallback()) {
+class ScoresAdapter: ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutionDiffCallback()) {
+    lateinit var changeScores: (position: Int, newScore: Int) -> Unit
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding: ScoreBinding = ScoreBinding.inflate(LayoutInflater.from(parent.context))
+        val binding: ScoreBinding =
+            ScoreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 

@@ -29,7 +29,8 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding: PlayerBinding = PlayerBinding.inflate(LayoutInflater.from(parent.context))
+        val binding: PlayerBinding =
+            PlayerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ViewHolder(binding)
     }
 
@@ -44,7 +45,9 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
 
     inner class ViewHolder(private val binding: PlayerBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        private var animator: ObjectAnimator = ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
+        private var animator: ObjectAnimator =
+            ObjectAnimator.ofFloat(binding.star, View.ROTATION, 360f)
+        private val adapter = ScoresAdapter()
 
         init {
             animator.duration = 1000
@@ -97,13 +100,14 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
                     .setNegativeButton("Annuler", null)
                     .show()
             }
-            val adapter = ScoresAdapter { scorePosition, newScore ->
-                player.scores[scorePosition] = newScore
+
+            adapter.changeScores = { scorePosition, newScore ->
+                player.scores[player.scores.size - 1 - scorePosition] = newScore
                 changePlayer(player)
             }
             binding.scores.adapter = adapter
             binding.total.text = player.total.toString() + " pts"
-            adapter.submitList(player.scores)
+            adapter.submitList(player.scores.reversed())
         }
 
         fun unbind() {
