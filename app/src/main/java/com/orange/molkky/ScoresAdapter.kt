@@ -41,7 +41,7 @@ class ScoresAdapter: ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutio
                     .setTitle("Modifier score ?")
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
-                        changeScores(position, editText.text.toString().toIntOrNull() ?: 0)
+                        changeScores(adapterPosition, editText.text.toString().toIntOrNull() ?: 0)
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
