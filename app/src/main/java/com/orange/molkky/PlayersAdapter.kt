@@ -102,12 +102,12 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
             }
 
             adapter.changeScores = { scorePosition, newScore ->
-                player.scores[player.scores.size - 1 - scorePosition] = newScore
+                player.scores[scorePosition] = newScore
                 changePlayer(player)
             }
             binding.scores.adapter = adapter
             binding.total.text = player.total.toString() + " pts"
-            adapter.submitList(player.scores.reversed())
+            adapter.submitList(player.scores)
         }
 
         fun unbind() {

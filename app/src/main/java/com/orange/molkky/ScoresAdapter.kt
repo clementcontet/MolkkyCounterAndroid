@@ -12,8 +12,7 @@ import com.google.android.material.textfield.TextInputLayout
 import com.orange.molkky.databinding.ScoreBinding
 import java.text.DecimalFormat
 
-
-class ScoresAdapter: ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutionDiffCallback()) {
+class ScoresAdapter : ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutionDiffCallback()) {
     lateinit var changeScores: (position: Int, newScore: Int) -> Unit
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -41,7 +40,10 @@ class ScoresAdapter: ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSolutio
                     .setTitle("Modifier score ?")
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
-                        changeScores(adapterPosition, editText.text.toString().toIntOrNull() ?: 0)
+                        changeScores(
+                            position,
+                            editText.text.toString().toIntOrNull() ?: 0
+                        )
                     }
                     .setNegativeButton("Annuler", null)
                     .show()
