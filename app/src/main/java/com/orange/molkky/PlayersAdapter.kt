@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator.INFINITE
+import android.annotation.SuppressLint
 import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
@@ -60,6 +61,7 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
             })
         }
 
+        @SuppressLint("SetTextI18n")
         fun bind(playerPosition: Int) {
             val player = players[playerPosition]
             binding.layout.setBackgroundColor(
@@ -102,12 +104,12 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
             }
 
             adapter.changeScores = { scorePosition, newScore ->
-                player.scores[scorePosition] = newScore
+                player.scores[player.scores.size - 1 - scorePosition] = newScore
                 changePlayer(player)
             }
             binding.scores.adapter = adapter
-            binding.total.text = player.total.toString() + " pts"
-            adapter.submitList(player.scores)
+            binding.total.text = "${player.total} pts"
+            adapter.submitList(player.scores.reversed())
         }
 
         fun unbind() {

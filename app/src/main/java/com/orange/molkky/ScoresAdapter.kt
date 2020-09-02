@@ -31,6 +31,7 @@ class ScoresAdapter : ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSoluti
             val score = getItem(position)
             binding.score.text = if (score == null) "-" else DecimalFormat("#00").format(score)
             binding.score.setOnClickListener {
+                val currentPosition = adapterPosition
                 val editText = TextInputEditText(binding.root.context)
                 val inputLayout = TextInputLayout(binding.root.context)
                 inputLayout.addView(editText)
@@ -41,7 +42,7 @@ class ScoresAdapter : ListAdapter<Int?, ScoresAdapter.ViewHolder>(DatabaseSoluti
                     .setView(inputLayout)
                     .setPositiveButton("Ok") { _, _ ->
                         changeScores(
-                            position,
+                            currentPosition,
                             editText.text.toString().toIntOrNull() ?: 0
                         )
                     }

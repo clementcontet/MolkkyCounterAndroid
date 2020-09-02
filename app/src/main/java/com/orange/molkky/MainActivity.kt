@@ -1,5 +1,6 @@
 package com.orange.molkky
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Build
@@ -50,7 +51,6 @@ class MainActivity : AppCompatActivity() {
         playersAdapter = PlayersAdapter {
             disposable.add(db.playerDao.updatePlayer(it)
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { _ -> Log.i("Mölkky", "Player updated") }
             )
         }
@@ -110,16 +110,15 @@ class MainActivity : AppCompatActivity() {
             activePlayer.scores.add(score)
             disposable.add(db.playerDao.updatePlayer(activePlayer)
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe { _ -> Log.i("Mölkky", "Score added") }
             )
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun addDigit(digit: Int) {
         vibrate()
-        binding.keyboard.newScore.text =
-            binding.keyboard.newScore.text.toString() + digit.toString()
+        binding.keyboard.newScore.text = "${binding.keyboard.newScore.text}$digit"
         checkValidateButton()
     }
 
@@ -184,8 +183,8 @@ class MainActivity : AppCompatActivity() {
     private fun getRound(): Int {
         val currentPlayers =
             players.filter { it.playingState == PlayerTable.PlayingState.PLAYING }
-        val maxRound = currentPlayers.map { it.scores.size }.max() ?: 0
-        val minRound = currentPlayers.map { it.scores.size }.min() ?: 0
+        val maxRound = currentPlayers.map { it.scores.size }.maxOrNull() ?: 0
+        val minRound = currentPlayers.map { it.scores.size }.minOrNull() ?: 0
         return if (maxRound == minRound) maxRound + 1 else maxRound
     }
 
@@ -239,7 +238,6 @@ class MainActivity : AppCompatActivity() {
                         }
                         disposable.add(db.playerDao.updatePlayers(players)
                             .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe { _ -> Log.i("Mölkky", "Scores reseted") })
                     }
                     .setNegativeButton("Annuler", null)
@@ -258,7 +256,6 @@ class MainActivity : AppCompatActivity() {
                     { _, _ ->
                         disposable.add(db.playerDao.deletePlayers(players.filterIndexed { key, _ -> checked[key] })
                             .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe { _ -> Log.i("Mölkky", "Players deleted") })
                     }
                     .setNegativeButton("Annuler", null)
@@ -286,7 +283,7 @@ class MainActivity : AppCompatActivity() {
                 val newPlayer =
                     PlayerTable(
                         name = editText.text.toString(),
-                        order = (players.map { it.order }.max() ?: 0) + 1
+                        order = (players.map { it.order }.maxOrNull() ?: 0) + 1
                     )
                 for (i in 0..getRound() - 2) {
                     newPlayer.scores.add(null)
