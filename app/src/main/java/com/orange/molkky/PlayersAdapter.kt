@@ -55,7 +55,7 @@ class PlayersAdapter(val changePlayer: (newPlayer: PlayerTable) -> Unit) :
             animator.repeatCount = INFINITE
             animator.interpolator = AccelerateDecelerateInterpolator()
             animator.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator?) {
+                override fun onAnimationEnd(animation: Animator) {
                     binding.star.rotation = 0f
                 }
             })
